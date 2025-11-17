@@ -1,0 +1,54 @@
+#!/bin/sh
+
+file=/dev/stdout
+
+showhelp()
+{
+	cat <<EOF > /dev/stderr
+Usage: $0 [options] [deb|rpm]
+
+	-d distrib Distribution; needed for deb format.
+	-h         Show this help message.
+	-n name    Name of package.
+	-o file    Output to file instead of stdout.
+EOF
+}
+
+while getopts 'd:hn:' o
+do
+	case "$o" in
+		o)
+			file="$OPTARG"
+			;;
+		n)
+			name="$OPTARG"
+			;;
+		d)
+			distrib="$OPTARG"
+			;;
+		?|h)
+			showhelp
+			exit 1
+			;;
+	esac
+done
+
+case "$(eval "echo \${$OPTIND}")" in
+	deb)
+		prettyfmt='%%NAME%% (%s) %%DEB_DIST%%;%n%b -- %an <%ae>  %aD%n'
+		skip='^%NAME%|^ --'
+		bullet='  * '
+		;;
+	rpm)
+		datefmt='%a %b %d %Y'
+		prettyfmt='* %ad %an <%ae> - %s%n%b'
+		skip='^\*'
+		bullet='- '
+		;;
+	*)
+		env LANG=C git log > "$file"
+		exit
+		;;
+esac
+
+env LANG=C git log --date="format:$datefmt" --pretty="format:$prettyfmt" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"

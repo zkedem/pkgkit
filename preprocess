@@ -1,0 +1,116 @@
+#!/bin/sh
+
+showhelp()
+{
+	cat <<EOF > /dev/stderr
+Usage: $0 [options] [MACRO=value...]
+
+	-c prefix Set comment prefix for #file# directive.
+	-d dest   Instead of editing source in place, copy to dest then edit.
+	-e chars  Escape these characters when using @MACRO@ directive
+	-h        Show this help message.
+	-s source Source file; edited in place by default.
+
+If neither -s nor -d are specified, stdin and stdout are used.
+EOF
+}
+
+setfile()
+{
+	exec 3< /dev/stdin
+	. /dev/stdin <<EOF
+$1()
+{
+	cat <<EOF1
+$(sed -E -e 's/([$\`])/\\\1/g' /dev/fd/3)
+EOF1
+}
+EOF
+	exec 3<&-
+}
+
+while getopts 'c:d:e:hs:' o
+do
+	case "$o" in
+		s)
+			source="$OPTARG"
+			;;
+		e)
+			chars="$OPTARG"
+			;;
+		d)
+			dest="$OPTARG"
+			;;
+		c)
+			prefix=$(echo "$OPTARG" | sed -E -e 's/\\/\\\\/g' -e 's/([.^$*+?()[{|])/\\\1/g')
+			;;
+		?|h)
+			showhelp
+			exit 1
+			;;
+	esac
+done
+
+unset o
+
+if [ -n "$source" ]
+then
+	if [ -z "$dest" ]
+	then
+		dest="$source"
+	fi
+else
+	if [ -n "$dest" ]
+	then
+		echo 'You must specify -s in order to use -d' > /dev/stderr
+		exit 1
+	else
+		source='/dev/stdin'
+		dest='/dev/stdout'
+	fi
+fi
+
+setfile input < "$source"
+setfile output <<EOF
+$(input)
+EOF
+
+for a in $(seq $OPTIND $#)
+do
+	eval "arg=\${$a}"
+	macro=$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\1/')
+	value=$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\2/')
+	if [ -n "$chars" ]
+	then
+		evalue=$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\2/' -e "s/([$chars])/\\\\\\\\\1/g")
+	else
+		evalue="$value"
+	fi
+	setfile output <<EOF
+$(output | sed -e "s/%$macro%/$value/g")
+EOF
+	setfile output <<EOF
+$(output | sed -e "s/@$macro@/$evalue/g")
+EOF
+done
+
+unset evalue
+unset value
+unset macro
+unset arg
+unset a
+
+while read -r i
+do
+	file=$(echo $i | sed -E -e "s|^${prefix}#(.+)#$|\1|")
+	[ -n "$file" ] || continue
+	setfile output <<EOF
+$(output | sed -e "\|$i|{r $file" -e 'd}')
+EOF
+done <<EOF
+$(input | grep -E -e "^${prefix}#[^#]+#$")
+EOF
+
+unset file
+unset i
+output > "$dest"

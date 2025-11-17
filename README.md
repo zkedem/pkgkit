@@ -1,0 +1,85 @@
+# pkgkit
+A set of useful tools for building packages.
+
+# Installation
+Just use `make` followed by `make install`. To uninstall, use `make uninstall`.
+
+# What's included
+
+## gitchangelog
+Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "+" or "\-" as bullets.
+
+### Usage
+Currectly, supported package types are `deb` and `rpm`.
+```
+gitchangelog [options] [deb|rpm]
+```
+If no package type is given, the output is the same as `git log`.
+
+### Options
+
+#### -d distrib
+For Debian-type packages, the name of the distribution (i.e. testing, stable, unstable).
+
+#### -h
+Show the help message.
+
+#### -n name
+The name of the package; currently only needed for Debian-type packages.
+
+#### -o file
+Output changelog to file instead of standard output.
+
+## preprocess
+A simple preprocessor for shell scripts, man pages, or any file that needs to be generated from a template. Input may be standard input or a file.
+
+### Directives
+preprocess supports a number of directives in its input.
+
+#### %MACRO%
+Replace `MACRO` with a value given on the command line.
+
+#### @MACRO@
+Same as `%MACRO%`, but escapes characters from a set given on the command line, if that set is given.
+
+#### \#FILE\#
+Insert the contents of `FILE` at this point; may have an optional prefix before the "\#". This directive must be placed at the beginning of a line.
+
+### Usage
+```
+preprocess [options] [MACRO=value...]
+```
+
+### Options
+
+#### -c prefix
+Defines a prefix that precedes the initial "\#" of the `#FILE#` directive. Usually, this will be whatever sequence of characters is used to indicate a comment in the language of the input. This is necessary for languages that don't use "\#" to indicate comments.\
+\
+Example: for JavaScript files, use `-c "//"`. Then, you can use the `#FILE#` directive like this:
+```
+//#somefile.js#
+```
+
+#### -d dest
+Destination file. By default, preprocess edits source files in place. This option allows the output to be sent to a separate file.
+
+#### -e chars
+Escape these characters (by preceding them with a "\\") when expanding the `@MACRO@` directive (with "@" signs). This does not affect the `%MACRO%` directive (with "%" signs).\
+\
+Example: with `-e ".-"`, if `VERSION=1.0.0-beta` is given on the command line, `@VERSION@` expands to:
+```
+1\.0\.0\-beta
+```
+while `%VERSION%` expands to:
+```
+1.0.0-beta
+```
+
+#### -h
+Show the help message.
+
+#### -s source
+Source file used as input. If `-d` is not given, this file is also used as the output (edited in place). If neither `-s` nor `-d` are given, preprocess reads from standard input and writes to standard output.
+
+# License
+pkgkit is licensed under the GNU General Public License v3.0.
