@@ -10,7 +10,7 @@ Just use `make` followed by `make install`. To uninstall, use `make uninstall`.
 Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "+" or "\-" as bullets.
 
 ### Usage
-Currectly, supported package types are `deb` and `rpm`.
+Currently, supported package types are `deb` and `rpm`.
 ```
 gitchangelog [options] [deb|rpm]
 ```
