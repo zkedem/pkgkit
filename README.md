@@ -30,6 +30,9 @@ The name of the package; currently only needed for Debian-type packages.
 #### -o file
 Output changelog to file instead of standard output.
 
+#### -r repo
+Retrieve log from remote repository instead of current local repository; may also be used in directories that are not Git repositories.
+
 ## preprocess
 A simple preprocessor for shell scripts, man pages, or any file that needs to be generated from a template. Input may be standard input or a file.
 

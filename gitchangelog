@@ -1,22 +1,45 @@
 #!/bin/sh
 
+b0=$(basename $0)
 file=/dev/stdout
 
 showhelp()
 {
 	cat <<EOF > /dev/stderr
-Usage: $0 [options] [deb|rpm]
+Usage: $b0 [options] [deb|rpm]
 
 	-d distrib Distribution; needed for deb format.
 	-h         Show this help message.
 	-n name    Name of package.
 	-o file    Output to file instead of stdout.
+	-r repo    Retrieve log from remote repository.
 EOF
 }
 
-while getopts 'd:hn:' o
+log()
+{
+	if [ -n "$repo" ]
+	then
+		prevdir=$(pwd)
+		tmpdir=$(basename "$repo" | sed -E -e 's/\.git//')
+		git clone --bare "$repo" "$tmpdir"
+		cd "$tmpdir"
+		env LANG=C git log "$@"
+		cd "$prevdir"
+		rm -rf "$tmpdir"
+		unset tmpdir
+		unset prevdir
+	else
+		env LANG=C git log "$@"
+	fi
+}
+
+while getopts 'd:hn:o:r:' o
 do
 	case "$o" in
+		r)
+			repo="$OPTARG"
+			;;
 		o)
 			file="$OPTARG"
 			;;
@@ -37,7 +60,7 @@ case "$(eval "echo \${$OPTIND}")" in
 	deb)
 		prettyfmt='%%NAME%% (%s) %%DEB_DIST%%;%n%b -- %an <%ae>  %aD%n'
 		skip='^%NAME%|^ --'
-		bullet='  * '
+		bullet='  \* '
 		;;
 	rpm)
 		datefmt='%a %b %d %Y'
@@ -46,9 +69,9 @@ case "$(eval "echo \${$OPTIND}")" in
 		bullet='- '
 		;;
 	*)
-		env LANG=C git log > "$file"
+		log > "$file"
 		exit
 		;;
 esac
 
-env LANG=C git log --date="format:$datefmt" --pretty="format:$prettyfmt" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
+log --date="format:$datefmt" --pretty="format:$prettyfmt" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
