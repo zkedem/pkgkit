@@ -83,12 +83,14 @@ case "$(eval "echo \${$OPTIND}")" in
 		prettyfmt='%%NAME%% (%s) %%DEB_DIST%%;%n%b -- %an <%ae>  %aD%n'
 		skip='^%NAME%|^ --'
 		bullet='  \* '
+		leader='  \1'
 		;;
 	rpm)
 		datefmt='%a %b %d %Y'
 		prettyfmt='* %ad %an <%ae> - %s%n%b'
 		skip='^\*'
 		bullet='- '
+		leader="$bullet"
 		;;
 	*)
 		log --until="$versiondate" > "$file"
@@ -96,4 +98,4 @@ case "$(eval "echo \${$OPTIND}")" in
 		;;
 esac
 
-log --date="format:$datefmt" --pretty="format:$prettyfmt" --until="$versiondate" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
+log --date="format:$datefmt" --pretty="format:$prettyfmt" --until="$versiondate" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" -e "s/^$bullet( *[+-] )/\1/" -e "s/(^ +[+-] )/$leader/" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"

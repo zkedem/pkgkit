@@ -7,7 +7,7 @@ Just use `make` followed by `make install`. To uninstall, use `make uninstall`. 
 # What's included
 
 ## gitchangelog
-Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "+" or "\-" as bullets.
+Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "+" or "\-" as bullets. The bulleted list should follow the same guidelines as set out in Github's [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) guidelines for unordered lists. Nested lists are supported.
 
 ### Usage
 Currently, supported package types are `deb` and `rpm`.
