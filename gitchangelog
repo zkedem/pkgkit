@@ -1,6 +1,6 @@
 #!/bin/sh
 
-b0=$(basename $0)
+b0="$(basename $0)"
 file=/dev/stdout
 
 showhelp()
@@ -14,12 +14,13 @@ Usage: $b0 [options] [deb|rpm]
 	-o file    Output to file instead of stdout.
 	-r repo    Retrieve log from remote repository.
 	-t         Try local repository, then remote repository; requires -r.
+	-v version Version of package; defaults to latest version.
 EOF
 }
 
 remotelog()
 {
-	prevdir=$(pwd)
+	prevdir="$(pwd)"
 	tmpdir="/tmp/$(basename "$repo" | sed -E -e 's/\.git//')"
 	git clone --bare "$repo" "$tmpdir"
 	cd "$tmpdir"
@@ -49,9 +50,12 @@ log()
 	fi
 }
 
-while getopts 'd:hn:o:r:t' o
+while getopts 'd:hn:o:r:tv:' o
 do
 	case "$o" in
+		v)
+			versiondate="$(log --grep="^${OPTARG}$" --pretty="format:%aD")"
+			;;
 		t)
 			trylocal=0
 			;;
@@ -87,9 +91,9 @@ case "$(eval "echo \${$OPTIND}")" in
 		bullet='- '
 		;;
 	*)
-		log > "$file"
+		log --until="$versiondate" > "$file"
 		exit
 		;;
 esac
 
-log --date="format:$datefmt" --pretty="format:$prettyfmt" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
+log --date="format:$datefmt" --pretty="format:$prettyfmt" --until="$versiondate" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"

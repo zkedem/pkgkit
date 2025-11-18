@@ -36,6 +36,9 @@ Retrieve log from remote repository instead of current local repository; may als
 #### -t
 Try local repository, then fall back to remote repository if it fails; requires `-r` option.
 
+#### -v version
+Version of package; if this is not given, the latest version is assumed by default.
+
 ## preprocess
 A simple preprocessor for shell scripts, man pages, or any file that needs to be generated from a template. Input may be standard input or a file.
 

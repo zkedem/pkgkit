@@ -57,10 +57,7 @@ unset o
 
 if [ -n "$source" ]
 then
-	if [ -z "$dest" ]
-	then
-		dest="$source"
-	fi
+	dest="${dest:-$source}"
 else
 	if [ -n "$dest" ]
 	then
