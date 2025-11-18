@@ -32,3 +32,5 @@ uninstall:
 			rm -f "$$fpath"; \
 		fi; \
 	done
+
+reinstall: uninstall install

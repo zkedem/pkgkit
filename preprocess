@@ -1,9 +1,11 @@
 #!/bin/sh
 
+b0=$(basename $0)
+
 showhelp()
 {
 	cat <<EOF > /dev/stderr
-Usage: $0 [options] [MACRO=value...]
+Usage: $b0 [options] [MACRO=value...]
 
 	-c prefix Set comment prefix for #file# directive.
 	-d dest   Instead of editing source in place, copy to dest then edit.

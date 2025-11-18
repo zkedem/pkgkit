@@ -13,30 +13,48 @@ Usage: $b0 [options] [deb|rpm]
 	-n name    Name of package.
 	-o file    Output to file instead of stdout.
 	-r repo    Retrieve log from remote repository.
+	-t         Try local repository, then remote repository; requires -r.
 EOF
+}
+
+remotelog()
+{
+	prevdir=$(pwd)
+	tmpdir="/tmp/$(basename "$repo" | sed -E -e 's/\.git//')"
+	git clone --bare "$repo" "$tmpdir"
+	cd "$tmpdir"
+	env LANG=C git log "$@"
+	cd "$prevdir"
+	rm -rf "$tmpdir"
+	unset tmpdir
+	unset prevdir
 }
 
 log()
 {
-	if [ -n "$repo" ]
+	if (exit ${trylocal:-1})
 	then
-		prevdir=$(pwd)
-		tmpdir=$(basename "$repo" | sed -E -e 's/\.git//')
-		git clone --bare "$repo" "$tmpdir"
-		cd "$tmpdir"
-		env LANG=C git log "$@"
-		cd "$prevdir"
-		rm -rf "$tmpdir"
-		unset tmpdir
-		unset prevdir
+		if [ -z "$repo" ]
+		then
+			echo 'You must specify -r in order to use -t' > /dev/stderr
+			showhelp
+			exit 1
+		fi
+		env LANG=C git log "$@" || remotelog "$@"
+	elif [ -n "$repo" ]
+	then
+		remotelog "$@"
 	else
 		env LANG=C git log "$@"
 	fi
 }
 
-while getopts 'd:hn:o:r:' o
+while getopts 'd:hn:o:r:t' o
 do
 	case "$o" in
+		t)
+			trylocal=0
+			;;
 		r)
 			repo="$OPTARG"
 			;;

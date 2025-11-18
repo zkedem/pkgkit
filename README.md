@@ -2,7 +2,7 @@
 A set of useful tools for building packages.
 
 # Installation
-Just use `make` followed by `make install`. To uninstall, use `make uninstall`.
+Just use `make` followed by `make install`. To uninstall, use `make uninstall`. You may also reinstall or upgrade to a new version using `make reinstall`.
 
 # What's included
 
@@ -32,6 +32,9 @@ Output changelog to file instead of standard output.
 
 #### -r repo
 Retrieve log from remote repository instead of current local repository; may also be used in directories that are not Git repositories.
+
+#### -t
+Try local repository, then fall back to remote repository if it fails; requires `-r` option.
 
 ## preprocess
 A simple preprocessor for shell scripts, man pages, or any file that needs to be generated from a template. Input may be standard input or a file.
