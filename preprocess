@@ -1,6 +1,6 @@
 #!/bin/sh
 
-b0=$(basename $0)
+b0="$(basename $0)"
 
 showhelp()
 {
@@ -45,7 +45,7 @@ do
 			dest="$OPTARG"
 			;;
 		c)
-			prefix=$(echo "$OPTARG" | sed -E -e 's/\\/\\\\/g' -e 's/([.^$*+?()[{|])/\\\1/g')
+			prefix="$(echo "$OPTARG" | sed -E -e 's/\\/\\\\/g' -e 's/([.^$*+?()[{|])/\\\1/g')"
 			;;
 		?|h)
 			showhelp
@@ -79,11 +79,11 @@ EOF
 for a in $(seq $OPTIND $#)
 do
 	eval "arg=\${$a}"
-	macro=$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\1/')
-	value=$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\2/')
+	macro="$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\1/')"
+	value="$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\2/')"
 	if [ -n "$chars" ]
 	then
-		evalue=$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\2/' -e "s/([$chars])/\\\\\\\\\1/g")
+		evalue="$(echo $arg | sed -E -e 's/^([^=]+)=(.+)$/\2/' -e "s/([$chars])/\\\\\\\\\1/g")"
 	else
 		evalue="$value"
 	fi
@@ -103,7 +103,7 @@ unset a
 
 while read -r i
 do
-	file=$(echo $i | sed -E -e "s|^${prefix}#(.+)#$|\1|")
+	file="$(echo $i | sed -E -e "s|^${prefix}#(.+)#$|\1|")"
 	[ -n "$file" ] || continue
 	setfile output <<EOF
 $(output | sed -e "\|$i|{r $file" -e 'd}')
