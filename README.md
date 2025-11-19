@@ -7,7 +7,7 @@ Just use `make` followed by `make install`. To uninstall, use `make uninstall`. 
 # What's included
 
 ## gitchangelog
-Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "+" or "\-" as bullets. The bulleted list should follow the same guidelines as set out in GitHub's [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) guidelines for unordered lists. Nested lists are supported.
+Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "\+" or "\-" as bullets. The bulleted list should follow the same guidelines as set out in GitHub's [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) guidelines for unordered lists. Nested lists are supported.
 
 ### Usage
 Currently, supported package types are `deb` and `rpm`.
@@ -17,6 +17,9 @@ gitchangelog [options] [deb|rpm]
 If no package type is given, the output is the same as `git log`.
 
 ### Options
+
+#### -D format
+Output version date in a given format, then exit. The formats are the same as for the `date` command, but without the leading "\+". Requires `-v` option.
 
 #### -d distrib
 For Debian-type packages, the name of the distribution (i.e. testing, stable, unstable).

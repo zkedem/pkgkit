@@ -8,6 +8,7 @@ showhelp()
 	cat <<EOF > /dev/stderr
 Usage: $b0 [options] [deb|rpm]
 
+	-D format  Output version date in given format, then exit; requires -v.
 	-d distrib Distribution; needed for deb format.
 	-h         Show this help message.
 	-n name    Name of package.
@@ -53,10 +54,16 @@ log()
 
 getversiondate()
 {
-	[ -n "$1" ] && log --grep="^${1}$" --pretty="format:%aD"
+	if [ -n "$2" ]
+	then
+		fmtspec='%ad'
+	else
+		fmtspec='%aD'
+	fi
+	[ -n "$1" ] && log --grep="^${1}$" --date="format:$2" --pretty="format:$fmtspec"
 }
 
-while getopts 'd:hn:o:r:stv:' o
+while getopts 'D:d:hn:o:r:stv:' o
 do
 	case "$o" in
 		v)
@@ -80,12 +87,27 @@ do
 		d)
 			distrib="$OPTARG"
 			;;
+		D)
+			format="$OPTARG"
+			;;
 		?|h)
 			showhelp
 			exit 1
 			;;
 	esac
 done
+
+if [ -n "$format" ]
+then
+	if [ -z "$version" ]
+	then
+		echo 'You must specify -v in order to use -D' > /dev/stderr
+		showhelp
+		exit 1
+	fi
+	getversiondate "$version" "$format" > "$file"
+	exit
+fi
 
 case "$(eval "echo \${$OPTIND}")" in
 	deb)
