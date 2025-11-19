@@ -8,7 +8,8 @@ showhelp()
 Usage: $b0 [options] [MACRO=value...]
 
 	-c prefix Set comment prefix for #file# directive.
-	-d dest   Instead of editing source in place, copy to dest then edit.
+	-d dest   Instead of editing source in place, copy to dest then edit;
+	          requires -s.
 	-e chars  Escape these characters when using @MACRO@ directive
 	-h        Show this help message.
 	-s source Source file; edited in place by default.
@@ -62,6 +63,7 @@ else
 	if [ -n "$dest" ]
 	then
 		echo 'You must specify -s in order to use -d' > /dev/stderr
+		showhelp
 		exit 1
 	else
 		source='/dev/stdin'
