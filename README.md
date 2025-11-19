@@ -33,6 +33,9 @@ Output changelog to file instead of standard output.
 #### -r repo
 Retrieve log from remote repository instead of current local repository; may also be used in directories that are not Git repositories.
 
+#### -s
+Skip changelog generation for an unknown or unspecified package type.
+
 #### -t
 Try local repository, then fall back to remote repository if it fails; requires `-r` option.
 

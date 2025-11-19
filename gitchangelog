@@ -13,6 +13,7 @@ Usage: $b0 [options] [deb|rpm]
 	-n name    Name of package.
 	-o file    Output to file instead of stdout.
 	-r repo    Retrieve log from remote repository.
+	-s         Skip log generation for unknown/unspecified package format.
 	-t         Try local repository, then remote repository; requires -r.
 	-v version Version of package; defaults to latest version.
 EOF
@@ -50,14 +51,22 @@ log()
 	fi
 }
 
-while getopts 'd:hn:o:r:tv:' o
+getversiondate()
+{
+	[ -n "$1" ] && log --grep="^${1}$" --pretty="format:%aD"
+}
+
+while getopts 'd:hn:o:r:stv:' o
 do
 	case "$o" in
 		v)
-			versiondate="$(log --grep="^${OPTARG}$" --pretty="format:%aD")"
+			version="$OPTARG"
 			;;
 		t)
 			trylocal=0
+			;;
+		s)
+			skiplog=0
 			;;
 		r)
 			repo="$OPTARG"
@@ -93,9 +102,9 @@ case "$(eval "echo \${$OPTIND}")" in
 		leader="$bullet"
 		;;
 	*)
-		log --until="$versiondate" > "$file"
+		! (exit ${skiplog:-1}) && log --until="$(getversiondate "$version")" > "$file"
 		exit
 		;;
 esac
 
-log --date="format:$datefmt" --pretty="format:$prettyfmt" --until="$versiondate" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" -e "s/^$bullet( *[+-] )/\1/" -e "s/(^ +[+-] )/$leader/" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
+log --date="format:$datefmt" --pretty="format:$prettyfmt" --until="$(getversiondate "$version")" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" -e "s/^$bullet( *[+-] )/\1/" -e "s/(^ +[+-] )/$leader/" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
