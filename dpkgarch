@@ -1,0 +1,64 @@
+#!/bin/sh
+
+showhelp()
+{
+	cat <<EOF > /dev/stderr
+Usage: $(basename $0) [-h] [-r] [archname]
+
+	-h  Show this help message.
+	-r  Reverse; translate Debian names to GNU names. Requires archname.
+
+If archname is not given, the current architecture name is used.
+EOF
+}
+
+while getopts 'hr' o
+do
+	case "$o" in
+		r)
+			reverse=0
+			;;
+		?|h)
+			showhelp
+			exit 1
+			;;
+	esac
+done
+
+unset o
+cputable=/usr/share/dpkg/cputable
+
+if [ ! -f "$cputable" ]
+then
+	cat <<EOF > /dev/stderr
+It appears that dpkg is not installed on your system.
+Install dpkg from your package manager, then try again.
+EOF
+	exit 1
+fi
+
+if [ -n "$(eval "echo \${$OPTIND}")" ]
+then
+	archname="$(eval "echo \${$OPTIND}")"
+else
+	if (exit ${reverse:-1})
+	then
+		echo 'Architecture name required' > /dev/stderr
+		showhelp
+		exit 1
+	fi
+	archname="$(uname -m)"
+fi
+
+if (exit ${reverse:-1})
+then
+	field1="$archname"
+	field2="[^	]+"
+	selector='\2'
+else
+	field1="[^	#]+"
+	field2="$archname"
+	selector='\1'
+fi
+# The fields in /usr/share/dpkg/cputable are separated by tabs, not spaces.
+grep -E -e "^[^#]" "$cputable" | grep -E -e "^${field1}	+${field2}(	+[^	]+){3}$" | sed -E -e "s/^([^	]+)	+([^	]+)(	+[^	]+){3}$/$selector/"

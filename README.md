@@ -6,6 +6,23 @@ Just use `make` followed by `make install`. To uninstall, use `make uninstall`. 
 
 # What's included
 
+## dpkgarch
+Translates GNU CPU architecture names to those used by Debian and dpkg. Requires dpkg to be installed.
+
+### Usage
+```
+dpkgarch [-h] [-r] [archname]
+```
+If no architecture name is given, `dpkgarch` will use the architecture name of the machine it is running on.
+
+### Options
+
+#### -h
+Show the help message.
+
+#### -r
+Reverse translation; Debian names are translated to GNU names. An architecture name must be given to use this option.
+
 ## gitchangelog
 Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "\+" or "\-" as bullets. The bulleted list should follow the same guidelines as set out in GitHub's [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) guidelines for unordered lists. Nested lists are supported.
 
