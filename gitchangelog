@@ -1,6 +1,7 @@
 #!/bin/sh
 
 b0="$(basename $0)"
+distrib=UNRELEASED
 file=/dev/stdout
 
 showhelp()
@@ -9,9 +10,9 @@ showhelp()
 Usage: $b0 [options] [deb|rpm]
 
 	-D format  Output version date in given format, then exit; requires -v.
-	-d distrib Distribution; needed for deb format.
+	-d distrib Distribution value for deb format; defaults to "$distrib".
 	-h         Show this help message.
-	-n name    Name of package.
+	-n name    Name of package; required for deb format.
 	-o file    Output to file instead of stdout.
 	-r repo    Retrieve log from remote repository.
 	-s         Skip log generation for unknown/unspecified package format.
@@ -61,6 +62,7 @@ getversiondate()
 		fmtspec='%aD'
 	fi
 	[ -n "$1" ] && log --grep="^${1}$" --date="format:$2" --pretty="format:$fmtspec"
+	unset fmtspec
 }
 
 while getopts 'D:d:hn:o:r:stv:' o
@@ -111,7 +113,13 @@ fi
 
 case "$(eval "echo \${$OPTIND}")" in
 	deb)
-		prettyfmt='%%NAME%% (%s) %%DEB_DIST%%;%n%b -- %an <%ae>  %aD%n'
+		if [ -z "$name" ]
+		then
+			echo 'You must specify -n for deb format' > /dev/stderr
+			showhelp
+			exit 1
+		fi
+		prettyfmt='%%NAME%% (%s) %%DEB_DIST%%; urgency=medium%n%n%b%n -- %an <%ae>  %aD%n'
 		skip='^%NAME%|^ --'
 		bullet='  \* '
 		leader='  \1'
