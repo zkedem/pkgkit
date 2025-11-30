@@ -4,7 +4,7 @@ b0="$(basename $0)"
 
 showhelp()
 {
-	cat <<EOF > /dev/stderr
+	cat <<EOF 1>&2
 Usage: $b0 [options] [MACRO=value...]
 
 	-c prefix Set comment prefix for #file# directive.
@@ -62,7 +62,7 @@ then
 else
 	if [ -n "$dest" ]
 	then
-		echo 'You must specify -s in order to use -d' > /dev/stderr
+		echo 'You must specify -s in order to use -d' 1>&2
 		showhelp
 		exit 1
 	else

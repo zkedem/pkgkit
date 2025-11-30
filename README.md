@@ -24,22 +24,45 @@ Show the help message.
 Reverse translation; Debian names are translated to GNU names. An architecture name must be given to use this option.
 
 ## gitchangelog
-Tool to generate a package changelog from your Git log. The only requirements are that each commit has the then-current version number as its subject line, and that the body be structured as a bulleted list, using "\+" or "\-" as bullets. The bulleted list should follow the same guidelines as set out in GitHub's [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) guidelines for unordered lists. Nested lists are supported.
+Tool to generate a package changelog from your Git log.
+
+### Format
+For each commit message, the subject line must be the version of that commit (e.g. 1.0.0), and the body should be structured as follows:
+```
+- change-details
+- more-change-details
+[- *distributions*: distrib1 [distrib2...]]
+[- *urgency*: low|medium|high|emergency|critical]
+```
+The body is structured as a Markdown bulleted list, using "\+" or "\-" as bullets, and generally following the guidelines set out in GitHub's [Basic writing and formatting syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#lists) guidelines for unordered lists. Nested lists are supported. The change details are mandatory. Two additional optional (but recommended) items define package metadata, currently only for Debian-type packages:
+- **distributions**: A space-separated list of distributions (i.e. `testing`, `stable`, `unstable`) for which the package can be installed. If this item is not present, the value of the `-d` option is used instead (see below).
+- **urgency**: The level of importance of upgrading to this version of the package from a previous version. Can be one of `low`, `medium`, `high`, `emergency`, or `critical`. Defaults to `medium` if this item is not present.
+
+Refer to the [Debian Policy Manual](https://www.debian.org/doc/debian-policy/ch-source.html#s-dpkgchangelog) for more information.
+
+Each metadata item follows this form:
+```
+- *name*: value
+```
+where the asterisks (\*) may be substituted with underscores (\_), and `name` contains neither asterisks nor underscores.
 
 ### Usage
 Currently, supported package types are `deb` and `rpm`.
 ```
 gitchangelog [options] [deb|rpm]
 ```
-If no package type is given, the output is the same as `git log`.
+By default, if no package type is given, or if the package type is unknown, the output is the same as `git log`.
 
 ### Options
 
 #### -D format
 Output version date in a given format, then exit. The formats are the same as for the `date` command, but without the leading "\+". Requires `-v` option.
 
+#### -b
+Output commit message body for a specific version, then exit. Requires `-v` option.
+
 #### -d distrib
-For Debian-type packages, the name of the distribution (i.e. testing, stable, unstable).
+For Debian-type packages, a distribution value to use if none is defined by the commit log; may be given as a space-separated list. Defaults to `UNRELEASED`.
 
 #### -h
 Show the help message.
@@ -57,7 +80,7 @@ Retrieve log from remote repository instead of current local repository; may als
 Skip changelog generation for an unknown or unspecified package type.
 
 #### -t
-Try local repository, then fall back to remote repository if it fails; requires `-r` option.
+Try local repository, then fall back to remote repository if it fails. Requires `-r` option.
 
 #### -v version
 Version of package; if this is not given, the latest version is assumed by default.

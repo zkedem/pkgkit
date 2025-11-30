@@ -6,11 +6,12 @@ file=/dev/stdout
 
 showhelp()
 {
-	cat <<EOF > /dev/stderr
+	cat <<EOF 1>&2
 Usage: $b0 [options] [deb|rpm]
 
 	-D format  Output version date in given format, then exit; requires -v.
-	-d distrib Distribution value for deb format; defaults to "$distrib".
+	-b         Output commit message body, then exit; requires -v.
+	-d distrib Fallback distribution for deb format; defaults to "$distrib".
 	-h         Show this help message.
 	-n name    Name of package; required for deb format.
 	-o file    Output to file instead of stdout.
@@ -21,17 +22,26 @@ Usage: $b0 [options] [deb|rpm]
 EOF
 }
 
-remotelog()
+cleanup()
 {
-	prevdir="$(pwd)"
-	tmpdir="/tmp/$(basename "$repo" | sed -E -e 's/\.git//')"
-	git clone --bare "$repo" "$tmpdir"
-	cd "$tmpdir"
-	env LANG=C git log "$@"
-	cd "$prevdir"
-	rm -rf "$tmpdir"
+	[ -n "$tmpdir" ] && rm -rf "$tmpdir"
 	unset tmpdir
 	unset prevdir
+}
+
+remotelog()
+{
+	[ -z "$prevdir" ] && prevdir="$(pwd)"
+	[ -z "$tmpdir" ] && tmpdir="/tmp/$(basename "$repo" | sed -E -e 's/\.git//')"
+	[ ! -d "$tmpdir" ] && git clone --bare "$repo" "$tmpdir"
+	cd "$tmpdir"
+	if ! env LANG=C git log "$@"
+	then
+		cd "$prevdir"
+		cleanup
+		exit 1
+	fi
+	cd "$prevdir"
 }
 
 log()
@@ -40,7 +50,7 @@ log()
 	then
 		if [ -z "$repo" ]
 		then
-			echo 'You must specify -r in order to use -t' > /dev/stderr
+			echo 'You must specify -r in order to use -t' 1>&2
 			showhelp
 			exit 1
 		fi
@@ -61,11 +71,21 @@ getversiondate()
 	else
 		fmtspec='%aD'
 	fi
-	[ -n "$1" ] && log --grep="^${1}$" --date="format:$2" --pretty="format:$fmtspec"
+	[ -n "$1" ] && log --grep="^$1$" --date="format:$2" --pretty="format:$fmtspec"
 	unset fmtspec
 }
 
-while getopts 'D:d:hn:o:r:stv:' o
+logfmt()
+{
+	log --grep="^$1$" --date="format:$datefmt" --pretty="format:$prettyfmt"
+}
+
+getmetadata()
+{
+	logfmt "$1" | grep -E -e "^[+-] [*_]$2[*_]: " | sed -E -e 's/^[+-] [*_][^*_]+[*_]: (.+)$/\1/'
+}
+
+while getopts 'D:bd:hn:o:r:stv:' o
 do
 	case "$o" in
 		v)
@@ -89,6 +109,9 @@ do
 		d)
 			distrib="$OPTARG"
 			;;
+		b)
+			body=0
+			;;
 		D)
 			format="$OPTARG"
 			;;
@@ -103,11 +126,25 @@ if [ -n "$format" ]
 then
 	if [ -z "$version" ]
 	then
-		echo 'You must specify -v in order to use -D' > /dev/stderr
+		echo 'You must specify -v in order to use -D' 1>&2
 		showhelp
 		exit 1
 	fi
 	getversiondate "$version" "$format" > "$file"
+	cleanup
+	exit
+fi
+
+if (exit ${body:-1})
+then
+	if [ -z "$version" ]
+	then
+		echo 'You must specify -v in order to use -b' 1>&2
+		showhelp
+		exit 1
+	fi
+	log --grep="^${version}$" --pretty="format:%b" > "$file"
+	cleanup
 	exit
 fi
 
@@ -115,11 +152,11 @@ case "$(eval "echo \${$OPTIND}")" in
 	deb)
 		if [ -z "$name" ]
 		then
-			echo 'You must specify -n for deb format' > /dev/stderr
+			echo 'You must specify -n for deb format' 1>&2
 			showhelp
 			exit 1
 		fi
-		prettyfmt='%%NAME%% (%s) %%DEB_DIST%%; urgency=medium%n%n%b%n -- %an <%ae>  %aD%n'
+		prettyfmt='%%NAME%% (%s) %%DISTRIBUTIONS%%; %%METADATA%%%n%n%b%n -- %an <%ae>  %aD%n'
 		skip='^%NAME%|^ --'
 		bullet='  \* '
 		leader='  \1'
@@ -133,8 +170,21 @@ case "$(eval "echo \${$OPTIND}")" in
 		;;
 	*)
 		! (exit ${skiplog:-1}) && log --until="$(getversiondate "$version")" > "$file"
+		cleanup
 		exit
 		;;
 esac
 
-log --date="format:$datefmt" --pretty="format:$prettyfmt" --until="$(getversiondate "$version")" | sed -E -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" -e "s/^$bullet( *[+-] )/\1/" -e "s/(^ +[+-] )/$leader/" | preprocess NAME="$name" DEB_DIST="$distrib" > "$file"
+last="$(log --pretty="format:%s" --until="`getversiondate "$version"`" | tail -n 1)"
+
+while read -r s
+do
+	distributions="$(getmetadata "$s" distributions)"
+	urgency="$(getmetadata "$s" urgency)"
+	logfmt "$s" | sed -E -e '/^[+-] [*_][^*_]+[*_]: /d' -e "s/^[+-] /$bullet/" -e "/($skip|^$bullet|^[[:space:]]*$)/!{s/^/$bullet/}" -e "s/^$bullet( *[+-] )/\1/" -e "s/(^ +[+-] )/$leader/" | preprocess NAME="$name" DISTRIBUTIONS="${distributions:-$distrib}" METADATA="urgency=${urgency:-medium}"
+	[ "$s" != "$last" ] && echo
+done <<EOF > "$file"
+$(log --pretty="format:%s" --until="`getversiondate "$version"`")
+EOF
+
+cleanup

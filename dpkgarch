@@ -2,7 +2,7 @@
 
 showhelp()
 {
-	cat <<EOF > /dev/stderr
+	cat <<EOF 1>&2
 Usage: $(basename $0) [-h] [-r] [archname]
 
 	-h  Show this help message.
@@ -30,7 +30,7 @@ cputable=/usr/share/dpkg/cputable
 
 if [ ! -f "$cputable" ]
 then
-	cat <<EOF > /dev/stderr
+	cat <<EOF 1>&2
 It appears that dpkg is not installed on your system.
 Install dpkg from your package manager, then try again.
 EOF
@@ -43,7 +43,7 @@ then
 else
 	if (exit ${reverse:-1})
 	then
-		echo 'Architecture name required' > /dev/stderr
+		echo 'Architecture name required' 1>&2
 		showhelp
 		exit 1
 	fi
