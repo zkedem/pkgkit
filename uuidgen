@@ -1,0 +1,20 @@
+#!/bin/sh
+
+while getopts 'h' o
+do
+	case "$o" in
+		?|h)
+			cat <<EOF >&2
+Usage: $(basename $0) [-h]
+
+	-h  Show this help message.
+EOF
+			exit 1
+			;;
+	esac
+done
+
+unset o
+rawbytes=$(dd if=/dev/random bs=1 count=16 2>/dev/null | od -A n -t x1 | tr -d ' ')
+varbyte=$(printf '%x' $((0x`echo $rawbytes | sed -E -e 's/^[[:xdigit:]]{16}([[:xdigit:]]{2})[[:xdigit:]]{14}$/\1/'` & ~64 | 128)))
+echo $rawbytes | sed -E -e "s/^([[:xdigit:]]{12})[[:xdigit:]]([[:xdigit:]]{3})[[:xdigit:]]{2}([[:xdigit:]]{14})$/\14\2$varbyte\3/" -e 's/^([[:xdigit:]]{8})([[:xdigit:]]{4})([[:xdigit:]]{4})([[:xdigit:]]{4})([[:xdigit:]]{12})$/\1-\2-\3-\4-\5/'

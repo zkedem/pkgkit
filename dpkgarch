@@ -1,5 +1,7 @@
 #!/bin/sh
 
+tab="	"
+
 showhelp()
 {
 	cat <<EOF 1>&2
@@ -53,12 +55,12 @@ fi
 if (exit ${reverse:-1})
 then
 	field1="$archname"
-	field2="[^	]+"
+	field2="[^$tab]+"
 	selector='\2'
 else
-	field1="[^	#]+"
+	field1="[^$tab#]+"
 	field2="$archname"
 	selector='\1'
 fi
-# The fields in /usr/share/dpkg/cputable are separated by tabs, not spaces.
-grep -E -e "^[^#]" "$cputable" | grep -E -e "^${field1}	+${field2}(	+[^	]+){3}$" | sed -E -e "s/^([^	]+)	+([^	]+)(	+[^	]+){3}$/$selector/"
+
+grep -E -e "^[^#]" "$cputable" | grep -E -e "^${field1}${tab}+${field2}(${tab}+[^${tab}]+){3}$" | sed -E -e "s/^([^$tab]+)$tab+([^$tab]+)($tab+[^$tab]+){3}$/$selector/"

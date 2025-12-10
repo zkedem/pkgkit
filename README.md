@@ -136,5 +136,21 @@ Show the help message.
 #### -s source
 Source file used as input. If `-d` is not given, this file is also used as the output (edited in place). If neither `-s` nor `-d` are given, preprocess reads from standard input and writes to standard output.
 
+## uuidgen
+Generates a UUID (a.k.a. GUID). Can be used to generate unique names for temporary files, or wherever a UUID or GUID might be needed.
+
+### Technical notes
+The generated UUID is a Version 4 Universally Unique IDentifier as specified in [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562). `uuidgen` reads 16 bytes from **/dev/random** as a 128-bit hexadecimal number, then sets the 13th digit to 4 and the 17th digit to one of 8, 9, A, or B, and finally inserts hyphens after the 8th, 12th, 16th, and 20th digits. On most systems, **/dev/random** should be cryptographically secure.
+
+### Usage
+```
+uuidgen [-h]
+```
+
+### Options
+
+#### -h
+Show the help message.
+
 # License
 pkgkit is licensed under the GNU General Public License v3.0.

@@ -13,7 +13,7 @@ all:
 
 clean:
 	true
-	
+
 install:
 	for f in *; \
 	do \
