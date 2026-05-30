@@ -144,13 +144,19 @@ The generated UUID is a Version 4 Universally Unique IDentifier as specified in 
 
 ### Usage
 ```
-uuidgen [-h]
+uuidgen [-b] [-h] [-u]
 ```
 
 ### Options
 
+#### -b
+Surround the UUID with curly brackets.
+
 #### -h
 Show the help message.
+
+#### -u
+Use uppercase letters for the hex digits.
 
 # License
 pkgkit is licensed under the GNU General Public License v3.0.

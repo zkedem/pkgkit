@@ -1,13 +1,28 @@
 #!/bin/sh
 
-while getopts 'h' o
+cclass=[:lower:]
+format='%x'
+unset lbracket
+unset rbracket
+
+while getopts 'bhu' o
 do
 	case "$o" in
+		u)
+			cclass=[:upper:]
+			format='%X'
+			;;
+		b)
+			lbracket='{'
+			rbracket='}'
+			;;
 		?|h)
 			cat <<EOF >&2
-Usage: $(basename $0) [-h]
+Usage: $(basename $0) [-b] [-h] [-u]
 
+	-b  Surround UUID with curly brackets.
 	-h  Show this help message.
+	-u  Use uppercase letters for hex digits.
 EOF
 			exit 1
 			;;
@@ -15,6 +30,6 @@ EOF
 done
 
 unset o
-rawbytes=$(dd if=/dev/random bs=1 count=16 2>/dev/null | od -A n -t x1 | tr -d ' ')
-varbyte=$(printf '%x' $((0x`echo $rawbytes | sed -E -e 's/^[[:xdigit:]]{16}([[:xdigit:]]{2})[[:xdigit:]]{14}$/\1/'` & ~64 | 128)))
-echo $rawbytes | sed -E -e "s/^([[:xdigit:]]{12})[[:xdigit:]]([[:xdigit:]]{3})[[:xdigit:]]{2}([[:xdigit:]]{14})$/\14\2$varbyte\3/" -e 's/^([[:xdigit:]]{8})([[:xdigit:]]{4})([[:xdigit:]]{4})([[:xdigit:]]{4})([[:xdigit:]]{12})$/\1-\2-\3-\4-\5/'
+rawbytes=$(dd if=/dev/random bs=1 count=16 2>/dev/null | od -A n -t x1 | tr -d ' ' | tr [:lower:] $cclass)
+varbyte=$(printf "$format" $((0x`echo $rawbytes | sed -E -e 's/^[[:xdigit:]]{16}([[:xdigit:]]{2})[[:xdigit:]]{14}$/\1/'` & ~64 | 128)))
+echo $rawbytes | sed -E -e "s/^([[:xdigit:]]{12})[[:xdigit:]]([[:xdigit:]]{3})[[:xdigit:]]{2}([[:xdigit:]]{14})$/\14\2$varbyte\3/" -e 's/^([[:xdigit:]]{8})([[:xdigit:]]{4})([[:xdigit:]]{4})([[:xdigit:]]{4})([[:xdigit:]]{12})$/\1-\2-\3-\4-\5/' -e "s/^/$lbracket/" -e "s/$/$rbracket/"
