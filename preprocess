@@ -71,7 +71,7 @@ do
 	else
 		evalue="$value"
 	fi
-	output="$(echo "$output" | sed -e "s/%$macro%/$value/g" -e "s/@$macro@/$evalue/g")"
+	output="$(printf "%s" "$output" | sed -e "s/%$macro%/$value/g" -e "s/@$macro@/$evalue/g")"
 done
 
 unset evalue
@@ -84,11 +84,11 @@ while read -r i
 do
 	file="$(echo $i | sed -E -e "s|^${prefix}#(.+)#$|\1|")"
 	[ -n "$file" ] || continue
-	output="$(echo "$output" | sed -e "\|$i|{r $file" -e 'd}')"
+	output="$(printf "%s" "$output" | sed -e "\|$i|{r $file" -e 'd}')"
 done <<EOF
-$(echo "$input" | grep -E -e "^${prefix}#[^#]+#$")
+$(printf "%s" "$input" | grep -E -e "^${prefix}#[^#]+#$")
 EOF
 
 unset file
 unset i
-echo "$output" > "$dest"
+printf "%s" "$output" > "$dest"
