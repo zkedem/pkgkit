@@ -57,7 +57,7 @@ else
 	fi
 fi
 
-read -r -d '' input < "$source"
+input="$(cat "$source")"
 output="$input"
 
 for a in $(seq $OPTIND $#)
