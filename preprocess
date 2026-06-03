@@ -71,7 +71,12 @@ do
 	else
 		evalue="$value"
 	fi
-	output="$(printf "%s" "$output" | sed -e "s/%$macro%/$value/g" -e "s/@$macro@/$evalue/g")"
+	if [ -n "$(echo "$value" | tr -c -d /)" ] || [ -n "$(echo "$evalue" | tr -c -d /)" ]
+	then
+		output="$(printf "%s" "$output" | sed -e "s:%${macro}%:${value}:g" -e "s:@${macro}@:${evalue}:g")"
+	else
+		output="$(printf "%s" "$output" | sed -e "s/%${macro}%/${value}/g" -e "s/@${macro}@/${evalue}/g")"
+	fi
 done
 
 unset evalue
